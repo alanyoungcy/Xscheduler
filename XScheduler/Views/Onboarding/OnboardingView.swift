@@ -3,6 +3,8 @@ import SwiftUI
 struct OnboardingView: View {
     @EnvironmentObject private var userViewModel: UserViewModel
     @State private var currentStep = 0
+    @State private var showError = false
+    @State private var errorMessage = ""
     
     var body: some View {
         NavigationView {
@@ -21,13 +23,7 @@ struct OnboardingView: View {
                 .indexViewStyle(.page(backgroundDisplayMode: .always))
                 
                 Button(action: {
-                    if currentStep < 2 {
-                        withAnimation {
-                            currentStep += 1
-                        }
-                    } else {
-                        userViewModel.completeOnboarding()
-                    }
+                    handleButtonTap()
                 }) {
                     Text(currentStep < 2 ? "Continue" : "Get Started")
                         .font(.headline)
@@ -37,10 +33,47 @@ struct OnboardingView: View {
                         .background(Color.accentColor)
                         .cornerRadius(12)
                 }
+                .disabled(!isStepValid)
                 .padding(.horizontal)
                 .accessibilityIdentifier("onboardingButton")
             }
             .navigationBarHidden(true)
+            .alert("Error", isPresented: $showError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(errorMessage)
+            }
+        }
+    }
+    
+    private var isStepValid: Bool {
+        switch currentStep {
+        case 0:
+            return true
+        case 1:
+            return !userViewModel.name.isEmpty &&
+                   !userViewModel.institution.isEmpty &&
+                   !userViewModel.gradeLevel.isEmpty &&
+                   !userViewModel.email.isEmpty
+        case 2:
+            return !userViewModel.selectedCourses.isEmpty
+        default:
+            return false
+        }
+    }
+    
+    private func handleButtonTap() {
+        if currentStep < 2 {
+            withAnimation {
+                currentStep += 1
+            }
+        } else {
+            do {
+                try userViewModel.completeOnboarding()
+            } catch {
+                showError = true
+                errorMessage = error.localizedDescription
+            }
         }
     }
 }
@@ -125,4 +158,9 @@ struct CourseSelectionView: View {
         }
         .padding()
     }
+}
+
+#Preview {
+    OnboardingView()
+        .environmentObject(PreviewData.sampleViewModel)
 } 

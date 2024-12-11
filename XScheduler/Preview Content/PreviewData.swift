@@ -1,5 +1,7 @@
 import Foundation
+import SwiftUI
 
+@MainActor
 struct PreviewData {
     static let sampleCourse = Course(
         name: "Mathematics",
@@ -27,9 +29,11 @@ struct PreviewData {
         courses: [sampleCourse]
     )
     
+    @MainActor
     static let sampleViewModel: UserViewModel = {
         let viewModel = UserViewModel()
-        //viewModel.currentUser = sampleUser
-        return True
+        viewModel.currentUser = sampleUser
+        viewModel.isOnboarding = false
+        return viewModel
     }()
 } 

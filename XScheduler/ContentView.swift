@@ -11,13 +11,16 @@ struct ContentView: View {
     @StateObject private var userViewModel = UserViewModel()
     
     var body: some View {
-        if userViewModel.isOnboarding {
-            OnboardingView()
-                .environmentObject(userViewModel)
-        } else {
-            MainTabView()
-                .environmentObject(userViewModel)
+        Group {
+            if userViewModel.isOnboarding {
+                OnboardingView()
+                    .environmentObject(userViewModel)
+            } else {
+                MainTabView()
+                    .environmentObject(userViewModel)
+            }
         }
+        .animation(.default, value: userViewModel.isOnboarding)
     }
 }
 

@@ -6,6 +6,7 @@ import Combine
 class UserViewModel: ObservableObject {
     @Published var currentUser: User?
     @Published var isOnboarding = true
+    @Published var errorMessage: String?
     
     // Onboarding form fields
     @Published var name = ""
@@ -35,7 +36,20 @@ class UserViewModel: ObservableObject {
               chapterTitle: "Economy USA")
     ]
     
-    func completeOnboarding() {
+    func completeOnboarding() throws {
+        // Validate user data
+        guard !name.isEmpty,
+              !institution.isEmpty,
+              !gradeLevel.isEmpty,
+              !email.isEmpty else {
+            throw AppError.invalidUserData
+        }
+        
+        // Validate course selection
+        guard !selectedCourses.isEmpty else {
+            throw AppError.invalidCourseSelection
+        }
+        
         let selectedCoursesList = availableCourses.filter { selectedCourses.contains($0.id) }
         
         let newUser = User(
@@ -46,13 +60,21 @@ class UserViewModel: ObservableObject {
             courses: selectedCoursesList
         )
         
-        self.currentUser = newUser
-        self.isOnboarding = false
-        saveUser()
+        do {
+            try saveUser(newUser)
+            withAnimation {
+                self.currentUser = newUser
+                self.isOnboarding = false
+            }
+        } catch {
+            throw AppError.persistenceError
+        }
     }
     
-    private func saveUser() {
+    private func saveUser(_ user: User) throws {
         // TODO: Implement persistence
+        // For now, just simulate success
+        // In a real app, this would save to UserDefaults, CoreData, or a backend
     }
     
     func getTodaySchedule() -> [Course] {
